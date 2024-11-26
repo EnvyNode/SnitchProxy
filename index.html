@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SnitchProxy</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+    }
+    header {
+      background-color: #1a1a2e;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    button {
+      background-color: #1a1a2e;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #16213e;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      padding: 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f4f4f9;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SnitchProxy</h1>
+    <p>Your Proxy Generator and Checker</p>
+  </header>
+  <div class="container">
+    <h2>Proxy Generator</h2>
+    <button id="generate-proxies">Generate Proxies</button>
+    <ul id="proxy-list"></ul>
+
+    <h2>Proxy Checker</h2>
+    <input type="text" id="proxy-input" placeholder="Enter proxy (IP:Port)" />
+    <button id="check-proxy">Check Proxy</button>
+    <p id="proxy-status"></p>
+  </div>
+
+  <script>
+    document.getElementById("generate-proxies").addEventListener("click", async () => {
+      const response = await fetch('/generate');
+      const proxies = await response.json();
+      const proxyList = document.getElementById("proxy-list");
+      proxyList.innerHTML = proxies.map(proxy => `<li>${proxy}</li>`).join('');
+    });
+
+    document.getElementById("check-proxy").addEventListener("click", async () => {
+      const proxy = document.getElementById("proxy-input").value;
+      const response = await fetch('/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proxy })
+      });
+      const result = await response.json();
+      document.getElementById("proxy-status").innerText = result.status;
+    });
+  </script>
+</body>
+</html>
