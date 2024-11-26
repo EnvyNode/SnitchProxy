@@ -36,54 +36,66 @@
     button:hover {
       background-color: #16213e;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    input {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: calc(100% - 1rem);
+    }
+    textarea {
+      width: calc(100% - 1rem);
+      height: 100px;
       margin-top: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
     }
-    th, td {
-      padding: 0.8rem;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    th {
-      background-color: #f4f4f9;
+    p {
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
   <header>
     <h1>SnitchProxy</h1>
-    <p>Your Proxy Generator and Checker</p>
+    <p>Proxy Generator and Checker</p>
   </header>
   <div class="container">
-    <h2>Proxy Generator</h2>
-    <button id="generate-proxies">Generate Proxies</button>
-    <ul id="proxy-list"></ul>
+    <h2>Generate Proxies</h2>
+    <input type="number" id="proxy-count" placeholder="Enter number of proxies" />
+    <button id="generate-proxies">Generate and Download</button>
 
-    <h2>Proxy Checker</h2>
-    <input type="text" id="proxy-input" placeholder="Enter proxy (IP:Port)" />
-    <button id="check-proxy">Check Proxy</button>
-    <p id="proxy-status"></p>
+    <h2>Check Proxies</h2>
+    <textarea id="proxies-to-check" placeholder="Enter proxies (IP:Port) separated by new lines"></textarea>
+    <button id="check-proxies">Check Proxies</button>
+    <p id="proxy-results"></p>
   </div>
 
   <script>
     document.getElementById("generate-proxies").addEventListener("click", async () => {
-      const response = await fetch('/generate');
-      const proxies = await response.json();
-      const proxyList = document.getElementById("proxy-list");
-      proxyList.innerHTML = proxies.map(proxy => `<li>${proxy}</li>`).join('');
+      const count = document.getElementById("proxy-count").value;
+      if (!count || count <= 0) return alert("Please enter a valid number of proxies.");
+      const response = await fetch(`/generate?count=${count}`);
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "proxies.txt";
+      link.click();
     });
 
-    document.getElementById("check-proxy").addEventListener("click", async () => {
-      const proxy = document.getElementById("proxy-input").value;
-      const response = await fetch('/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ proxy })
+    document.getElementById("check-proxies").addEventListener("click", async () => {
+      const proxies = document.getElementById("proxies-to-check").value.split("\n").filter(Boolean);
+      if (!proxies.length) return alert("Please enter proxies to check.");
+      const response = await fetch("/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ proxies })
       });
-      const result = await response.json();
-      document.getElementById("proxy-status").innerText = result.status;
+      const results = await response.json();
+      document.getElementById("proxy-results").innerHTML = results
+        .map(proxy => `<p>${proxy.proxy}: ${proxy.status}</p>`)
+        .join("");
     });
   </script>
 </body>
